@@ -2,61 +2,130 @@
 
 > **Core insight**: The more skills you add, the harder routing becomes. The system isn't weak — skill descriptions simply lack the signal LLMs need to make good decisions.
 >
-> This methodology has been battle-tested on **128 skills across 40 categories**, covering Hermes Agent, Claude Code, and Codex ecosystems.
+> Battle-tested on **120+ skills across 40 categories**.
 
-## The 6-Stage Review Pipeline
+## The 7-Stage Pipeline
 
 ```
-Stage 1: Routing Diagnosis — Find problems
-Stage 2: Critical Questioning — Deep analysis
-Stage 3: User Approval — Decision and triage
-Stage 4: Execution and Fix — Precise treatment
-Stage 5: Verification — Quality check
-Stage 6: Final Report — Deliver results
+Stage 1: Routing Diagnosis          — Find problems
+Stage 2: Classification & Tagging   — Build the skill tree
+         ↓ User verifies classification ←--- KEY STEP
+Stage 3: Critical Questioning       — Deep analysis
+Stage 4: User Approval              — Decision & triage
+Stage 5: Execution & Fix            — Precise treatment
+Stage 6: Verification               — Quality check
+Stage 7: Final Report               — Deliver results
 ```
+
+---
 
 ## Stage 1: Routing Diagnosis
 
 ### Health Checklist
 
-Check each skill against 6 routing health items:
+Check each skill against **6 routing health items**:
 
 | # | Check | Symptoms | Severity |
 |---|-------|----------|----------|
 | 1 | Template Residuals | Python literals like .join, kw[: in descriptions | Critical |
 | 2 | Wrong Locale | Triggers in English (for non-English users) | Critical |
 | 3 | Redundant Description | Trigger scenario and output are nearly identical | Suggested |
-| 4 | Weak Negative Samples | "When not needed" — too vague, no alternative | Suggested |
+| 4 | Weak Negative Samples | "When not needed" — no alternative pointed to | Suggested |
 | 5 | Single-layer Tags | Tags have only one level (e.g., ["media"]) | Optional |
 | 6 | Missing Links | related_skills is empty or no cross-category links | Optional |
 
 ### Universal Routing Structure
 
-Every skill should have 4 layers of routing information:
-
 ```
 [Trigger Scenario] When to use — "When the user needs to..."
 [Input Signals] Keywords/intent in user input
 [Output Goal] What it produces — clear deliverable
-[Exclusion Rules] When NOT to use — points to alternatives
+[Exclusion Rules] When NOT to use — points to alternative skills
 ```
 
-## Stage 2: Critical Questioning
+---
+
+## Stage 2: Classification and Tagging (⚠️ Previously Missing)
+
+Before deep analysis, **classify each skill into the right category**.
+
+### What We Do
+
+```
+Each skill gets:
+  1. tags (dual-layer: category + subcategory) e.g. [media, bilibili]
+  2. Directory placement (which category it belongs to)
+  3. related_skills (upstream/downstream links)
+```
+
+### Skill Tree
+
+```
+Development
+├── planning       — brainstorming, writing-plans
+├── implementation — tdd, subagent-driven, spike
+├── debugging      — systematic-debugging
+├── code-review    — requesting, receiving
+└── completion     — verification, branch-finishing
+
+Collaboration
+├── coordination   — parallel-agents, git-worktrees, kanban
+
+GitHub
+├── devops         — auth, issues, pr-workflow
+├── management     — repo-management, cleanup, polish
+└── codebase       — inspection, code-review
+
+Creative
+├── design         — architecture-diagram, excalidraw, p5js
+├── visual         — ascii-art, sketch, touchdesigner
+├── writing        — humanizer, songwriting
+└── prototype      — claude-design, pretext
+
+Media
+├── video          — bilibili, youtube, songsee
+├── audio          — transcription, music
+└── image          — gif-search, vision-tagging
+
+MLOps — models, inference, evaluation
+Productivity — pdf, notion, airtable, workspace
+Note-taking — obsidian, pipeline
+Research — arxiv, blogwatcher, llm-wiki
+Hermes Config — profile, plugin, gateway
+```
+
+### ➡️ User Verifies Classification (Key Step)
+
+```
+Classifications assembled → You review → 
+✅ Confirm → Move to Stage 3
+🔄 Adjust → You tell me what to change → Re-confirm
+```
+
+This prevents "the categories I chose aren't the ones you wanted" — avoids wasted effort downstream.
+
+---
+
+## Stage 3: Critical Questioning
+
+Now that classifications are confirmed, challenge them.
 
 ### 5W1H Framework
 
-- **What**: What does this skill do? What if it didn't? Is there a better category?
-- **Why**: Why is it in this category? Why not another? Does the user need it?
-- **Who**: Who will use this skill? Who benefits? Who would misfire it?
-- **When**: When does it trigger correctly? When would it false trigger?
-- **Where**: Is the category placement right? Is there a better position?
-- **How**: How does it execute? How do you verify it worked?
+```
+What: What does this skill do? What if it didn't? Better category?
+Why: Why is it here? Why not another category? Does user need it?
+Who: Who uses it? Who would misfire it?
+When: When does it trigger correctly? When would it false trigger?
+Where: Is the placement right? Better position?
+How: How does it execute? How to verify?
+```
 
 ### Reverse Thinking
 
 ```
 Normal to Edge
-- Normal trigger to Edge case (empty input, max length, special chars)
+- Normal trigger to Edge case (empty, max length, special chars)
 - Normal flow to Error flow (interrupt, timeout, failure)
 - Normal environment to Abnormal (no network, no permissions)
 
@@ -66,99 +135,103 @@ Certain to Hypothetical
 - Skill executes correctly to Skill executes incorrectly
 ```
 
-### Assumption Mining
-
-| Assumption Type | Common Assumption | Counter-Example |
-|----------------|-------------------|-----------------|
-| User behavior | User describes as expected | Vague, incomplete input |
-| Environment | Environment works | Network errors, service down |
-| Dependencies | All skills exist | Missing or mismatched skills |
-| Sequencing | Skills fire in order | Out-of-order, concurrent triggers |
-
 ### "So What?" Probe
 
 ```
-Found issue to So what?
+Issue found to So what?
 - Affects one skill to So what? What else?
 - Affects one category to So what? Who else?
-- Affects entire system to So what? How big?
+- Affects whole system to So what? How big?
 - Affects user to So what? How many users?
 ```
 
-## Stage 3: User Approval
+---
+
+## Stage 4: User Approval
 
 Package findings into a decision list:
 
 ```
-Critical (always fix):
-  [ ] Template residual: + ,.join(kw[:5]) + to Fix
-  [ ] English trigger: When user needs... to Localize
+Critical (always fix — these are bugs):
+  [ ] Template residual → Fix
+  [ ] English trigger → Localize
 
 Suggested (user decides):
-  [ ] Weak negative: "When not needed" to Point to alternative
+  [ ] Weak negative → Point to alternative
+  [ ] Category move → From media to note-taking
 
 Optional (nice to have):
-  [ ] Missing related_skills to Add cross-links
+  [ ] Missing related_skills → Add links
 ```
 
-## Stage 4: Execution and Fix
+---
+
+## Stage 5: Execution and Fix
 
 ### Core Principle: Route Only, Don't Touch
 
 | OK to Modify | NOT OK to Modify |
 |-------------|-----------------|
 | Description, trigger conditions | Functional code, commands |
-| Keywords, tags | Script commands, API params |
-| related_skills links | Config templates, examples |
-| Negative samples | File structure, layouts |
+| Tags, categories | API parameters, script commands |
+| related_skills | Config templates |
+| Negative samples | File structure |
 
-### Batch Fix Mode
+---
 
-1. Category mapping: Auto-generate triggers from directory names
-2. Format unification: Template the 4-layer description
-3. Link completion: Auto-recommend related_skills
+## Stage 6: Verification
 
-## Stage 5: Verification
+Re-run Stage 1 checklist:
 
-After fixes, re-run Stage 1 checks:
-
+```
 - [ ] Template residuals cleared?
 - [ ] Triggers localized?
 - [ ] Input signals cover natural language variants?
 - [ ] Negative samples point to alternatives?
-- [ ] Tags optimized (dual-layer)?
+- [ ] Tags dual-layer?
 - [ ] related_skills have cross-category links?
 - [ ] YAML frontmatter syntax valid?
+```
 
-## Stage 6: Final Report
+---
+
+## Stage 7: Final Report
 
 ```
 === Skill Audit Report ===
-Skill: example-skill
-Category: media/bilibili
-Result: 5/6 passed
+Skills: 128
+Initial coverage: 23/128 (18%)
+Final coverage: 128/128 (100%)
 
-Critical Template residual to Fixed
-Critical English trigger to Fixed
-Suggested Weak negative to Fixed
-Suggested Redundant desc to User declined
-Optional Single-layer tag to Fixed
-Optional Missing links to Fixed
-Verification passed
+Fixes applied:
+- Template residuals: 14
+- English triggers: 97
+- Weak negatives: 54
+
+Skipped (user choice):
+- Tags optimization: Not processed
+- related_skills: Not processed
+
+Third-party pack misfire rate: ~30% to ~5%
+
+Status: Healthy
 ```
 
-## When to Apply This
+---
 
-1. After installing new skills: Auto-review
-2. When writing new skills: Apply routing standards at creation
-3. After batch import: Batch review + routing optimization
-4. Before system upgrade: Full skill audit
-5. After misfire incidents: Targeted fix + improve negative samples
+## Difference from the Old 6-Stage Flow
 
-## Advantages
+| Old (6-stage) | New (7-stage) | Why |
+|---------------|---------------|-----|
+| Diagnosis to Critical Questioning | Diagnosis to **Classification to User Verification to** Critical Questioning | Classification must come before critique, and you need to confirm it |
+| One approval step | **Classification verification + Fix approval** — two decisions | One decision was too much; splitting is clearer |
+| Critique came first | Classification verified before critique | Avoids wasting effort on a classification you don't agree with |
 
-- Cross-platform: Hermes, Claude Code, Codex
-- Battle-tested: 128 skills in production
-- Quantifiable: Each check can be automated
-- Progressive: Single skill to batch optimization
-- Non-invasive: Only routing descriptions, never functionality
+---
+
+## When to Run
+
+1. After installing new skills: Run stages 1-2, wait for your confirmation
+2. After batch import: Full pipeline
+3. After misfire incidents: Start from stage 3 (classification is already set)
+4. Periodic maintenance: Stages 3-7 (classification stays, only routing quality)
