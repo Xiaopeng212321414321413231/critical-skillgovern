@@ -147,75 +147,38 @@
 
 ---
 
-## 🆕 附录：平台无关的分类 Prompt 模板
+## 🆕 附录：平台无关的分类 Prompt 模板（强约束版）
 
-> 以下模板可直接嵌入任何 AI Agent（WorkBuddy / Claude Code / Codex / ChatGPT）的 n8n 工作流或 system prompt 中，无需适配。
+> **为什么必须强约束**：实战证明（WorkBuddy 29-skill 分类失败案例），弱 prompt 会导致 LLM 自创类别、重复归类、垃圾技能混入。以下 prompt 经过加固，可直接复制到任何平台的 n8n 工作流中。
 
-### 分类指令模板
+### 完整的可用 Prompt 文件
 
-```
-任务：对以下技能集合进行分类。
+独立保存于 `docs/prompts/classify-skills-v2.txt`，可直接嵌入 n8n LLM 节点的 System Prompt。
 
-分类标准（请严格使用以下 7 个大类，不要自创新类）：
+### Prompt 核心加固点
 
-🌐 信息采集 (information-collection)
-├── social-media      — 社交媒体信息获取、内容采集
-├── web-scraping      — 网页爬取、结构化提取
-├── hot-trends        — 热点追踪、趋势监控
-└── download          — 文件/媒体下载
+| 加固项 | 解决的问题 |
+|--------|-----------|
+| **角色定义** | "你没有权力创建新类别" |
+| **铁律 5 条** | ❌禁止新类 ❌禁止重复 ❌禁止拆分 ✅归入实用工具 ✅严格格式 |
+| **过滤规则** | 跳过纯数字 ID、空 description、系统保留名 |
+| **Few-Shot 示例** | 8 个正确示例 + 4 个错误示例（含反模式） |
+| **歧义消解 3 层优先级** | 核心产出 → 目标用户 → 上游依赖 |
+| **输出格式约束** | "不要加说明、不要加序号、不要加 markdown" |
 
-✍️ 信息整理 (information-organization)
-├── note-taking       — 笔记管理、知识库
-├── mind-map          — 思维导图
-└── slides            — 演示文稿、PPT
+### 使用方法（n8n 工作流）
 
-🔍 搜索与资源发现 (search-resource-discovery)
-├── search            — 通用搜索、学术搜索
-└── files             — 文件查找、资源发现
+1. 在 n8n 的 LLM 节点 → System Prompt 中粘贴 `docs/prompts/classify-skills-v2.txt` 的内容
+2. 在 User Message 中传入技能列表（每行一个技能名）
+3. 解析 LLM 输出（格式: `技能名: 类别 → 子类`）
 
-🤖 智能代理与自动化 (agent-automation)
-├── agent             — AI 代理、IDE 代理
-└── automation        — 工作流自动化
+### 反模式对照表
 
-📊 开发与工具 (development-tools)
-├── database          — 数据库
-└── dev-tools         — 开发工具、调试器
+| 错误行为 | 典型案例 | 修复方式 |
+|---------|---------|---------|
+| 自创类别 | "内容创作/开发工具/知识管理" | prompt 加"你没有权力创建新类别" |
+| 重复归类 | playwright-mcp 同时出现在 2 个类 | prompt 加"禁止重复归类" |
+| 垃圾技能混入 | skill_2053082144792322048 | prompt 加过滤规则 |
+| 格式混乱 | 带序号/说明/解释 | prompt 加"不要加说明、不要加序号" |
 
-🎥 多媒体 (multimedia)
-├── video             — 视频处理
-├── audio             — 音频处理
-├── image             — 图片处理
-└── design            — 设计、视觉
-
-🔧 实用工具 (utilities)
-├── 通用工具（不匹配以上任何类别时归入此类）
-
-规则：
-1. 每个技能只能分到 1 个类别下的 1 个子类（双向互斥）
-2. 如果技能匹配多个类别，选最核心的功能
-3. 如果技能完全不匹配以上任何类别，归入"实用工具"
-4. 输出格式：
-
-```
-技能名: [大类] → [子类]
-```
-
-示例：
-```
-agent-reach: 信息采集 → social-media
-bilibili-video-extractor: 信息采集 → social-media
-dashi-ppt: 信息整理 → slides
-obsidian: 信息整理 → note-taking
-last30days: 实用工具 → 通用工具
-```
-```
-
-将此模板保存为独立的 prompt 文件，WorkBuddy 的 n8n 工作流可在调用 LLM 分类时直接注入。
-
-### 互斥规则
-
-同一技能不能同时出现在多个类别中。当 LLM 犹豫时：
-
-1. **看核心产出** — 产出是一张图？→ multimedia/image。产出是一份笔记？→ information-organization/note-taking
-2. **看目标用户** — 给开发者用？→ development-tools。给所有人用？→ utilities
-3. **看上游依赖** — 需要外部 API？→ information-collection。本地处理？→ multimedia
+> ⚠️ 如果分类结果仍有问题，先检查 LLM 输出中是否有以上反模式，再加固对应的 prompt 约束
