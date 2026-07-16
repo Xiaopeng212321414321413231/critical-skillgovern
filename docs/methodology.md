@@ -144,3 +144,78 @@
 | 仅路由检查 | + 可执行性检查 + 平台兼容性扫描 |
 | 纯找问题 | + 能力发散挖掘 + 改进方向 |
 | 可改源代码 | + 代码保护审计 + 底线原则 |
+
+---
+
+## 🆕 附录：平台无关的分类 Prompt 模板
+
+> 以下模板可直接嵌入任何 AI Agent（WorkBuddy / Claude Code / Codex / ChatGPT）的 n8n 工作流或 system prompt 中，无需适配。
+
+### 分类指令模板
+
+```
+任务：对以下技能集合进行分类。
+
+分类标准（请严格使用以下 7 个大类，不要自创新类）：
+
+🌐 信息采集 (information-collection)
+├── social-media      — 社交媒体信息获取、内容采集
+├── web-scraping      — 网页爬取、结构化提取
+├── hot-trends        — 热点追踪、趋势监控
+└── download          — 文件/媒体下载
+
+✍️ 信息整理 (information-organization)
+├── note-taking       — 笔记管理、知识库
+├── mind-map          — 思维导图
+└── slides            — 演示文稿、PPT
+
+🔍 搜索与资源发现 (search-resource-discovery)
+├── search            — 通用搜索、学术搜索
+└── files             — 文件查找、资源发现
+
+🤖 智能代理与自动化 (agent-automation)
+├── agent             — AI 代理、IDE 代理
+└── automation        — 工作流自动化
+
+📊 开发与工具 (development-tools)
+├── database          — 数据库
+└── dev-tools         — 开发工具、调试器
+
+🎥 多媒体 (multimedia)
+├── video             — 视频处理
+├── audio             — 音频处理
+├── image             — 图片处理
+└── design            — 设计、视觉
+
+🔧 实用工具 (utilities)
+├── 通用工具（不匹配以上任何类别时归入此类）
+
+规则：
+1. 每个技能只能分到 1 个类别下的 1 个子类（双向互斥）
+2. 如果技能匹配多个类别，选最核心的功能
+3. 如果技能完全不匹配以上任何类别，归入"实用工具"
+4. 输出格式：
+
+```
+技能名: [大类] → [子类]
+```
+
+示例：
+```
+agent-reach: 信息采集 → social-media
+bilibili-video-extractor: 信息采集 → social-media
+dashi-ppt: 信息整理 → slides
+obsidian: 信息整理 → note-taking
+last30days: 实用工具 → 通用工具
+```
+```
+
+将此模板保存为独立的 prompt 文件，WorkBuddy 的 n8n 工作流可在调用 LLM 分类时直接注入。
+
+### 互斥规则
+
+同一技能不能同时出现在多个类别中。当 LLM 犹豫时：
+
+1. **看核心产出** — 产出是一张图？→ multimedia/image。产出是一份笔记？→ information-organization/note-taking
+2. **看目标用户** — 给开发者用？→ development-tools。给所有人用？→ utilities
+3. **看上游依赖** — 需要外部 API？→ information-collection。本地处理？→ multimedia
