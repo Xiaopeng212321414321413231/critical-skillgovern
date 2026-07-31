@@ -21,7 +21,7 @@ REQUIRED_SECTIONS = ['【触发场景】', '【输入特征】', '【输出目�
 
 def validate_hermes_skill(path):
     """Validate a single Hermes SKILL.md."""
-    with open(path) as f:
+    with open(path, encoding='utf-8') as f:
         content = f.read()
     
     parts = content.split('---', 2)

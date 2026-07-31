@@ -77,7 +77,7 @@ def scan_hermes_skills(base_path):
             continue
         
         try:
-            with open(os.path.join(root, 'SKILL.md')) as f:
+            with open(os.path.join(root, 'SKILL.md'), encoding='utf-8') as f:
                 content = f.read()
             parts = content.split('---', 2)
             if len(parts) < 3:
@@ -159,7 +159,7 @@ def main():
     print_report(results)
     
     if args.csv:
-        with open(args.csv, 'w', newline='') as f:
+        with open(args.csv, 'w', newline='', encoding='utf-8-sig') as f:
             writer = csv.writer(f)
             writer.writerow(['Name', 'Path', 'Severity', 'Issue', 'Detail'])
             for r in results:
