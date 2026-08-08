@@ -115,6 +115,61 @@ good / total = 技能完整率
 - 触发场景长度 < 80 字
 - 关键词覆盖 3 种以上用户自然表达
 
+## 通用路由验证（Universal Routing）
+
+> **v2.7 升级**：路由验证从"硬编码 Hermes 专属"升级为"人人可用的通用路由"。
+> 任何平台的技能文件都能被自动检测、验证，无需修改脚本。
+
+### 支持的路由 Schema
+
+| 格式 | 检测特征 | 路由段落标准 |
+|------|----------|-------------|
+| `hermes` | YAML frontmatter + `name` | 【触发场景】/【输入特征】/【输出目标】/【不适用场景】+ tags |
+| `claude-code` | `When the user` 条件描述 | When 条件 + Use this skill 指引 |
+| `codex` | `You are` / `Instructions` 风格 | 角色定义 + 指令段落 |
+| `generic` | 任意 Markdown | 宽松：标题 + 正文非空 |
+
+### 使用方式
+
+```bash
+# 自动检测（推荐）：对任意平台技能目录
+python scripts/validate-routing.py --path ./skills
+
+# 指定格式：全库统一校验
+python scripts/validate-routing.py --path ./skills --format hermes
+
+# 严格模式：警告也计为失败（CI 门禁用）
+python scripts/validate-routing.py --path ./skills --strict
+
+# JSON 输出：接入 CI / 自动报告
+python scripts/validate-routing.py --path ./skills --json
+```
+
+### 扩展新平台（人人可用）
+
+在 `scripts/validate-routing.py` 的 `ROUTING_SCHEMAS` 字典中加一条即可：
+
+```python
+"my-platform": {
+    "desc": "一句话说明",
+    "required_sections": ["你的路由段落标准"],
+    "needs_frontmatter": True/False,
+    "needs_tags": True/False,
+    "desc_max_len": 500,
+},
+```
+
+自动检测规则在 `detect_format()` 中按特征字符串判断，新平台可自行追加特征。
+
+### 自动检测逻辑
+
+```
+有 YAML frontmatter + name → hermes
+含 "When the user"       → claude-code
+含 "You are" 指令        → codex
+否则                      → generic（宽松通过）
+```
+
 ## 与各平台的映射
 
 ### Hermes Agent

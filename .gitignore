@@ -1,0 +1,11 @@
+# 本机运行状态（不对外）
+.hermes/
+logs/
+input/
+__pycache__/
+*.pyc
+
+# 临时文件
+*.tmp
+.DS_Store
+Thumbs.db
