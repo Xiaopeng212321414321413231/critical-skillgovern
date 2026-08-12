@@ -19,6 +19,11 @@ from pathlib import Path
 
 
 REQUIRED_SECTIONS = ['【触发场景】', '【输入特征】', '【输出目标】', '【不适用场景】']
+
+# 目录剪枝：跳过隐藏目录和辅助目录，避免遍历 node_modules/.git 等无关目录
+SKIP_DIRS = {"references", "templates", "scripts", "assets", "examples",
+             "tests", "__pycache__", "node_modules", ".git", ".hermes",
+             ".archive", ".venv", "venv", "dist", "build"}
 TEMPLATE_RESIDUALS = ['.join', 'kw[:', '+ ,', "', '", "\n.join"]
 
 
@@ -69,6 +74,8 @@ def scan_hermes_skills(base_path):
     """Scan Hermes Agent SKILL.md files."""
     results = []
     for root, dirs, files in os.walk(base_path):
+        # 剪枝：提前跳过隐藏/辅助目录，不进入子目录遍历
+        dirs[:] = [d for d in dirs if not d.startswith('.') and d not in SKIP_DIRS]
         if 'SKILL.md' not in files:
             continue
         rel = os.path.relpath(root, base_path).replace(os.sep, '/')

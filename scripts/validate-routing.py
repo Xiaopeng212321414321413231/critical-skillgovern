@@ -109,10 +109,14 @@ def extract_route_sections(content: str, fmt: str):
     return fm, desc
 
 
-def validate_one(path: Path, fmt: str) -> dict:
-    """校验单个技能文件，返回结果 dict。"""
-    with open(path, encoding="utf-8") as f:
-        content = f.read()
+def validate_one(path: Path, fmt: str, content: str = None) -> dict:
+    """校验单个技能文件，返回结果 dict。
+
+    content 可选：由调用方传入已读取的内容时不再重复读文件（避免磁盘 IO 翻倍）。
+    """
+    if content is None:
+        with open(path, encoding="utf-8") as f:
+            content = f.read()
 
     schema = ROUTING_SCHEMAS[fmt]
     fm, desc = extract_route_sections(content, fmt)
@@ -183,7 +187,7 @@ def scan(base_path: Path, fmt: str) -> list:
                 with open(p, encoding="utf-8") as f:
                     content = f.read()
                 detected = detect_format(content) if fmt == "auto" else fmt
-                results.append(validate_one(p, detected))
+                results.append(validate_one(p, detected, content))
             except Exception as e:
                 results.append({
                     "name": fn,
