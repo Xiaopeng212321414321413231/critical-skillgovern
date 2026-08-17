@@ -1,0 +1,29 @@
+﻿{
+  "name": "dsh-skillgovern",
+  "version": "1.0.0",
+  "description": "Skill routing governance tools for DeepSeek Harness",
+  "type": "module",
+  "main": "index.js",
+  "files": [
+    "index.js",
+    "cordis.patch.yml",
+    "prompts/",
+    "templates/"
+  ],
+  "dependencies": {
+    "@deepseek-ai/dsh-tools": "0.1.0-rc.12"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "keywords": [
+    "deepseek-harness",
+    "dsh-plugin",
+    "skill-governance",
+    "routing-diagnosis",
+    "skill-classification"
+  ],
+  "license": "MIT"
+}

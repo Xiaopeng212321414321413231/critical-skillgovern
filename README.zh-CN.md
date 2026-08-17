@@ -1,9 +1,9 @@
-# 🔍 Critical SkillGovern
+﻿# 🔍 Critical SkillGovern
 
 > **批判式技能治理框架** — 跨平台技能质量审查方法论，**已在 120+ 技能实战验证**。
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Platforms](https://img.shields.io/badge/Platform-Hermes%20%7C%20Claude%20Code%20%7C%20Codex-blue)]()
+[![Platforms](https://img.shields.io/badge/Platform-Hermes%20%7C%20Codex%20%7C%20DeepSeek%20Harness-blue)]()
 
 ---
 
@@ -65,7 +65,7 @@
 | 平台 | 技能格式 | 适配指南 |
 |------|----------|----------|
 | 🏛️ **Hermes Agent** | SKILL.md (YAML frontmatter + Markdown) | [adapters/hermes.md](adapters/hermes.md) |
-| 🌀 **Claude Code** | .claude/skills/*.md (Markdown) | [adapters/claude-code.md](adapters/claude-code.md) |
+| 🔌 **DeepSeek Harness** | DSH 工具插件 (defineTool) | [dsh-plugin/](dsh-plugin/) |
 | 🤖 **Codex CLI** | Prompt 模板 / Shell 包装器 | [adapters/codex.md](adapters/codex.md) |
 
 ---
@@ -93,11 +93,16 @@ critical-skillgovern/
 ├── LICENSE                           # MIT 许可证
 ├── docs/
 │   ├── methodology.md                # 核心方法论（六阶段流水线）
-│   └── routing-optimization.md       # 路由优化 + 四层描述
+│   ├── routing-optimization.md       # 路由优化 + 四层描述
+│   └── prompts/
+│       └── classify-skills-v2.txt    # 技能分类 Prompt v2.1
 ├── adapters/
 │   ├── hermes.md                     # Hermes Agent 适配
-│   ├── claude-code.md                # Claude Code 适配
 │   └── codex.md                      # Codex CLI 适配
+├── dsh-plugin/                       # DeepSeek Harness 插件
+│   ├── package.json                  # DSH bundle 清单
+│   ├── cordis.patch.yml              # Cordis 配置
+│   └── index.js                      # 插件入口（3 个工具）
 ├── templates/
 │   ├── diagnostic-card.md            # 诊断卡模板
 │   └── skill-audit-report.md         # 审计报告模板
@@ -107,7 +112,7 @@ critical-skillgovern/
 ├── examples/
 │   ├── before-after.md               # 优化前后对比
 │   ├── full-audit-example.md         # 120 技能完整审计示例
-│   └── third-party-packs.md          # 🌟 第三方包实战案例
+│   └── third-party-packs.md          # 第三方包实战案例
 └── CONTRIBUTING.md                   # 贡献指南
 ```
 
@@ -131,12 +136,34 @@ critical-skillgovern/
 
 | 特性 | Critical SkillGovern | 传统路由优化 |
 |------|---------------------|---------------|
-| 跨平台 | Hermes / Claude Code / Codex | 仅锁定单一平台 |
+| 跨平台 | Hermes / Codex / DeepSeek Harness | 仅锁定单一平台 |
 | 批判性思维 | 逆向思维 + 假设挖掘 | 仅正向检查 |
 | 第三方包适配 | 专门案例 + 批量脚本 | 无第三方考虑 |
 | 实战验证 | 128 技能真实数据 | 理论设计 |
 | 用户可控 | 严重度分级 + 选择性修复 | 全自动无人工 |
 | 二次验证 | 修复后全量复检 | 无此步骤 |
+
+---
+
+## DeepSeek Harness 插件
+
+安装 DSH 插件，直接在 Agent 中获得 3 个技能治理工具：
+
+```bash
+# 从 GitHub 安装
+dsh plugin --profile web add github:Xiaopeng212321414321413231/critical-skillgovern#path:dsh-plugin
+
+# 从本地克隆安装
+dsh plugin --profile web add ./dsh-plugin
+```
+
+| 工具 | 功能 |
+|------|------|
+| `skill-diagnose` | 诊断单个技能文件的路由健康度 |
+| `skill-audit` | 批量审计整个技能目录 |
+| `skill-classify` | 将技能分类到结构化类别（7 大类、19 子类） |
+
+已收录于 [DSH 1024Store](https://deepseek1024.com)。
 
 ---
 

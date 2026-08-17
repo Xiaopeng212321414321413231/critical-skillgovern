@@ -1,9 +1,9 @@
-# 🔍 Critical SkillGovern
+﻿# 🔍 Critical SkillGovern
 
 > **A cross-platform skill quality governance framework** — battle-tested on **128 skills across 40 categories**.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Platforms](https://img.shields.io/badge/Platform-Hermes%20%7C%20Claude%20Code%20%7C%20Codex-blue)]()
+[![Platforms](https://img.shields.io/badge/Platform-Hermes%20%7C%20Codex%20%7C%20DeepSeek%20Harness-blue)]()
 
 [中文版](README.zh-CN.md)
 
@@ -78,7 +78,7 @@ Routing Diagnosis → Critical Questioning → User Approval → Execution → V
 | Platform | Skill Format | Adapter |
 |----------|-------------|---------|
 | 🏛️ **Hermes Agent** | SKILL.md (YAML frontmatter + Markdown) | [adapters/hermes.md](adapters/hermes.md) |
-| 🌀 **Claude Code** | .claude/skills/*.md (Markdown) | [adapters/claude-code.md](adapters/claude-code.md) |
+| 🔌 **DeepSeek Harness** | DSH tool plugin (defineTool) | [dsh-plugin/](dsh-plugin/) |
 | 🤖 **Codex CLI** | Prompt templates / Shell wrappers | [adapters/codex.md](adapters/codex.md) |
 
 ---
@@ -117,11 +117,16 @@ critical-skillgovern/
 ├── LICENSE                           # MIT
 ├── docs/
 │   ├── methodology.md                # Core methodology (6-stage pipeline)
-│   └── routing-optimization.md       # Routing optimization guide
+│   ├── routing-optimization.md       # Routing optimization guide
+│   └── prompts/
+│       └── classify-skills-v2.txt    # Skill classification prompt v2.1
 ├── adapters/
 │   ├── hermes.md                     # Hermes Agent guide
-│   ├── claude-code.md                # Claude Code guide
 │   └── codex.md                      # Codex CLI guide
+├── dsh-plugin/                       # DeepSeek Harness plugin
+│   ├── package.json                  # DSH bundle manifest
+│   ├── cordis.patch.yml              # Cordis configuration
+│   └── index.js                      # Plugin entry (3 tools)
 ├── templates/
 │   ├── diagnostic-card.md            # Diagnostic card template
 │   └── skill-audit-report.md         # Audit report template
@@ -131,7 +136,7 @@ critical-skillgovern/
 ├── examples/
 │   ├── before-after.md               # Before/after optimization examples
 │   ├── full-audit-example.md         # Full 128-skill audit walkthrough
-│   └── third-party-packs.md          # 🌟 Third-party pack case study
+│   └── third-party-packs.md          # Third-party pack case study
 └── CONTRIBUTING.md                   # Contribution guide
 ```
 
@@ -155,12 +160,34 @@ Tested on a **128-skill, 40-category** Hermes Agent library with Superpowers, Ba
 
 | Feature | Critical SkillGovern | Traditional Approaches |
 |---------|---------------------|----------------------|
-| Cross-platform | Hermes / Claude Code / Codex | Single platform only |
+| Cross-platform | Hermes / Codex / DeepSeek Harness | Single platform only |
 | Critical thinking | Reverse thinking + assumption mining | Forward checks only |
 | Third-party pack support | Dedicated case studies + batch scripts | No third-party coverage |
 | Battle-tested | 128 real skills with real data | Theoretical design |
 | User-controlled | Severity-based triage + selective fix | Fully automated, no oversight |
 | Verification step | Full re-check after fixes | No verification |
+
+---
+
+## DeepSeek Harness Plugin
+
+Install the DSH plugin to get 3 skill governance tools directly in your agent:
+
+```bash
+# From GitHub
+dsh plugin --profile web add github:Xiaopeng212321414321413231/critical-skillgovern#path:dsh-plugin
+
+# Or from local clone
+dsh plugin --profile web add ./dsh-plugin
+```
+
+| Tool | Description |
+|------|-------------|
+| `skill-diagnose` | Diagnose a single skill file for routing health issues |
+| `skill-audit` | Batch audit all skills in a directory |
+| `skill-classify` | Classify skills into structured categories (7 major, 19 sub) |
+
+Listed on [DSH 1024Store](https://deepseek1024.com).
 
 ---
 
