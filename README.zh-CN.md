@@ -60,6 +60,43 @@
 
 ---
 
+## ⚡ 非自回归路由（Laya）：把"描述"变成可测量的路由指标
+
+四层描述解决的是"描述写得清不清楚"，但它没有回答**"这样写到底选不选得对"**。
+`scripts/laya_router.py` 用 **Laya**（421M 非自回归判决器，一次前向并行出全部候选概率，
+纯 CPU 单次约 0.9 s）做 L0 路由，把每一步都量出来：
+
+```
+L0 laya（非自回归 · 判决）  →  L1 本地 AR 模型（执行技能）  →  L2 云端 AR agent（低置信度接管）
+                                      ↑ 执行结果 / 用户纠正 ↓
+                              定义回灌 refine：反推 route_text 与负样本
+```
+
+**本机实测（真实技能库）：**
+
+| 做法 | top-1 | 说明 |
+|---|---|---|
+| 直接拿 description 首句喂 laya | 33.3% | ❌ 走了弯路 |
+| 从句提取 + 压到 ≤9 词 | **83.3%**（top-3 100%） | 10 候选、12 条英文用例、随机基线 10% |
+| 中文查询（候选仍为英文） | 66.7% | ⇒ 中文库必须用 `laya-multilingual` |
+| **大库 66 技能：flat 全量** | **25.0%**（top-3 66.7%） | 每项只剩 2~3 token，描述被砍光 |
+| **大库 66 技能：shortlist K=10 + 双语 route_text** | **66.7%**（top-3 83.3%、召回 100%） | ✅ 端到端跑通「判决 + 回灌」 |
+
+**三条硬约束**（来自 laya 实现内部，非调参可绕）：
+1. 选项共享 `head_max_len` token 预算（english=192 / multilingual=256）→ **66 技能时每项只剩 2~3 token**，必须分级或先做 shortlist 粗筛；
+2. english 档选项 ≥ 11 时官方温度被 SDK 强制抬回，**confidence 不可信** → 候选数控制在 ≤10（multilingual 档无此键，不受限）；
+3. english 检查点读不了中文描述（官方 non-en 意图 0.306 ≈ 随机）→ 中文技能库必须换多语言档（本机已备好）。
+
+**闭环**：`route/eval` 落日志 → `feedback` 记录纠正 → `refine` 挖判别性词生成补丁（只提案，需你审批）
+→ 改 `data/route_text_overrides.json` → 重跑 `eval` 复测 top-1 是否真的涨。
+**实测这轮闭环**：66 技能库首版 shortlist 只召回 41.7%（英文 route_text 撞中文查询），
+补**双语 route_text** 后 → 召回 **100%**、top-1 **41.7% → 66.7%**，全程没改任何技能本体。
+**技能定义从此像权重一样被路由误差"梯度下降"。**
+
+📖 完整方案与全部实测数据 → [docs/laya-routing.md](docs/laya-routing.md)
+
+---
+
 ## 支持的平台
 
 | 平台 | 技能格式 | 适配指南 |
@@ -108,7 +145,10 @@ critical-skillgovern/
 │   └── skill-audit-report.md         # 审计报告模板
 ├── scripts/
 │   ├── batch-review.py               # 批量审查脚本
-│   └── validate-routing.py           # 路由验证脚本
+│   ├── validate-routing.py           # 路由验证脚本（静态：描述合不合规）
+│   └── laya_router.py                # 非自回归路由 + 定义回灌（动态：选不选得对）
+├── data/                             # laya 路由工作区（路由表 / 日志 / 补丁 / route_text 覆盖）
+├── docs/laya-routing.md              # Laya 非自回归路由方案与实测
 ├── examples/
 │   ├── before-after.md               # 优化前后对比
 │   ├── full-audit-example.md         # 120 技能完整审计示例

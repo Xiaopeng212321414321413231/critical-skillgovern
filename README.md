@@ -132,13 +132,53 @@ critical-skillgovern/
 │   └── skill-audit-report.md         # Audit report template
 ├── scripts/
 │   ├── batch-review.py               # Batch review script
-│   └── validate-routing.py           # Routing validation script
+│   └── validate-routing.py           # Routing validation script (static: is the description valid?)
 ├── examples/
 │   ├── before-after.md               # Before/after optimization examples
 │   ├── full-audit-example.md         # Full 128-skill audit walkthrough
 │   └── third-party-packs.md          # Third-party pack case study
 └── CONTRIBUTING.md                   # Contribution guide
 ```
+
+---
+
+---
+
+## ⚡ Non-autoregressive routing (Laya)
+
+The four-layer description answers *"is the description clear?"* — it does not answer
+**"does this description actually route correctly?"**. `scripts/laya_router.py` adds an
+L0 router on **Laya** (a 421M non-autoregressive decision model: one forward pass returns
+a probability for every candidate, ~0.9 s on plain CPU) and measures every step:
+
+```
+L0 laya (non-AR, verdict)  →  L1 local AR model (runs the skill)  →  L2 cloud AR agent (low-confidence takeover)
+                                        ↑ result / user correction ↓
+                              refine: back-propagate into route_text and negative samples
+```
+
+**Measured on a real 65-skill library (same machine):**
+
+| Approach | top-1 | Note |
+|---|---|---|
+| Feed the first sentence of `description` straight in | 33.3% | ❌ dead end |
+| Extract the "Use when …" clause, compress to ≤9 words | **83.3%** (top-3 100%) | 10 candidates, 12 English cases, random baseline 10% |
+| Chinese query (candidates still English) | 66.7% | ⇒ a Chinese library needs `laya-multilingual` |
+
+**Three hard constraints** (from Laya's internals, not tunable away):
+1. All options share a `head_max_len=192` token budget → at **65 skills each option keeps ~2 tokens**;
+   you must go hierarchical or shortlist by embedding first;
+2. With ≥ 11 options the shipped temperature is clamped by the SDK, so **confidence is not trustworthy**
+   → keep candidates ≤ 10;
+3. The English checkpoint cannot read Chinese descriptions (official non-en intent 0.306 ≈ random)
+   → use the multilingual checkpoint for a Chinese library.
+
+**Closed loop**: `route`/`eval` log every verdict → `feedback` records corrections →
+`refine` mines discriminative terms and proposes patches (proposals only, human approval required) →
+edit `data/route_text_overrides.json` → re-run `eval` to confirm top-1 actually improved.
+Skill definitions get *gradient-descended by routing error*.
+
+📖 Full design and all measurements → [docs/laya-routing.md](docs/laya-routing.md)
 
 ---
 
